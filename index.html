@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Follower Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .file-input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .file-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .file-input:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            margin-top: 10px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .not-following-back {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .not-following-back h3 {
+            color: #e53e3e;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .user-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        .user-item:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #e53e3e;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .instructions {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            color: #234e52;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .instructions ol {
+            color: #2d3748;
+            font-size: 14px;
+            line-height: 1.6;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .user-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📊</div>
+        <h1>Instagram Follower Checker</h1>
+        <p class="subtitle">Descubra quem você segue mas não te segue de volta no Instagram</p>
+
+        <div class="instructions">
+            <h3>📋 Como usar:</h3>
+            <ol>
+                <li>Baixe seus dados do Instagram (Configurações → Privacidade → Baixar dados)</li>
+                <li>Extraia o arquivo ZIP e localize os arquivos HTML de "Seguindo" e "Seguidores"</li>
+                <li>Faça upload dos dois arquivos abaixo</li>
+                <li>Clique em "Analisar" para ver os resultados</li>
+            </ol>
+        </div>
+
+        <div class="upload-section">
+            <div class="file-input-group">
+                <label for="following-file">📤 Arquivo de "Seguindo" (following.html)</label>
+                <input type="file" id="following-file" class="file-input" accept=".html" />
+            </div>
+
+            <div class="file-input-group">
+                <label for="followers-file">📥 Arquivo de "Seguidores" (followers.html)</label>
+                <input type="file" id="followers-file" class="file-input" accept=".html" />
+            </div>
+
+            <button class="analyze-btn" onclick="analyzeFollowers()">
+                🔍 Analisar Seguidores
+                 by resilientcdm
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analisando seus dados...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="following-count">0</div>
+                    <div class="stat-label">Seguindo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="followers-count">0</div>
+                    <div class="stat-label">Seguidores</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="not-following-back-count">0</div>
+                    <div class="stat-label">Não seguem de volta</div>
+                </div>
+            </div>
+
+            <div class="not-following-back">
+                <h3>👥 Pessoas que não te seguem de volta:</h3>
+                <div class="user-list" id="user-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeFollowers() {
+            const followingFile = document.getElementById('following-file').files[0];
+            const followersFile = document.getElementById('followers-file').files[0];
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const resultsDiv = document.getElementById('results');
+
+            // Reset UI
+            errorDiv.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            
+            // Validate files
+            if (!followingFile || !followersFile) {
+                showError('Por favor, selecione ambos os arquivos (Seguindo e Seguidores).');
+                return;
+            }
+
+            // Show loading
+            loadingDiv.style.display = 'block';
+
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('following_file', followingFile);
+                formData.append('followers_file', followersFile);
+
+                // Make API request
+                const response = await fetch('/api/instagram/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erro ao processar os arquivos');
+                }
+
+                // Display results
+                displayResults(data);
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            // Update stats
+            document.getElementById('following-count').textContent = data.total_following;
+            document.getElementById('followers-count').textContent = data.total_followers;
+            document.getElementById('not-following-back-count').textContent = data.not_following_back_count;
+
+            // Update user list
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = '';
+
+            if (data.not_following_back.length === 0) {
+                userList.innerHTML = '<div class="user-item">🎉 Todas as pessoas que você segue te seguem de volta!</div>';
+            } else {
+                data.not_following_back.forEach(username => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'user-item';
+                    userItem.textContent = `@${username}`;
+                    userList.appendChild(userItem);
+                });
+            }
+
+            // Show results
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // File input styling
+        document.getElementById('following-file').addEventListener('change', function(e) {
+            updateFileInputLabel(e.target, 'following-file');
+        });
+
+        document.getElementById('followers-file').addEventListener('change', function(e) {
+            updateFileInputLabel(e.target, 'followers-file');
+        });
+
+        function updateFileInputLabel(input, inputId) {
+            const fileName = input.files[0] ? input.files[0].name : 'Nenhum arquivo selecionado';
+            input.style.color = input.files[0] ? '#333' : '#666';
+        }
+    </script>
+</body>
+</html>
+
